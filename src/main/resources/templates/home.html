@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome | My Premium Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        /* Naya Premium Background - Deep Blue to Black Gradient */
+        .hero-section {
+            background: radial-gradient(circle at top right, #1e3c72, #112244, #000000);
+            height: 100vh;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+        }
+
+        /* Abstract Glow Effect */
+        .hero-section::before {
+            content: "";
+            position: absolute;
+            top: 20%;
+            right: 15%;
+            width: 300px;
+            height: 300px;
+            background: rgba(0, 123, 255, 0.15);
+            filter: blur(100px);
+            border-radius: 50%;
+        }
+
+        .btn-get-started {
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            background: white;
+            color: #1e3c72;
+            border: none;
+            font-weight: bold;
+            transition: 0.4s;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn-get-started:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+            background: #f8f9fa;
+        }
+
+        /* Signup Button Hover Effect (Special) */
+        .btn-signup-premium {
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(13, 202, 240, 0.4);
+            font-weight: 600;
+        }
+        .btn-signup-premium:hover {
+            transform: scale(1.08);
+            background-color: #ffffff !important;
+            color: #0dcaf0 !important;
+            box-shadow: 0 8px 25px rgba(13, 202, 240, 0.6);
+        }
+
+        /* Card Hover Effect & Consistency */
+        .feature-card {
+            transition: all 0.3s ease;
+            border-radius: 20px;
+            min-height: 350px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border: 1px solid rgba(0,0,0,0.05) !important;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-12px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.12) !important;
+            border-color: #007bff !important;
+        }
+
+        .icon-style {
+            color: #007bff;
+            margin-bottom: 20px;
+        }
+        
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-section h1 { font-size: 2rem !important; }
+            .hero-section .lead { font-size: 1rem !important; }
+            .btn-get-started { padding: 12px 28px; font-size: 1rem; }
+            .feature-card { min-height: auto; }
+        }
+        @media (max-width: 480px) {
+            .hero-section h1 { font-size: 1.6rem !important; }
+            .hero-section { padding-top: 60px; }
+            .navbar-brand { font-size: 1.1rem !important; }
+        }
+        /* Profile Dropdown Styling */
+        .dropdown-menu { border-radius: 12px; border: none; padding: 10px; }
+        .dropdown-item { border-radius: 8px; padding: 8px 15px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top shadow">
+        <div class="container">
+            <a class="navbar-brand fw-bold fs-4" href="/">
+                <i class="fas fa-cube text-info me-2"></i>MyLocker
+            </a>
+            
+            <div class="ms-auto d-flex align-items-center">
+                <div sec:authorize="isAnonymous()">
+                    <a href="/req/login" class="btn btn-outline-light px-4 me-2">Login</a>
+                    <a href="/req/signup" class="btn btn-info text-white px-4 btn-signup-premium">Sign Up</a>
+                </div>
+
+                <div sec:authorize="isAuthenticated()" class="dropdown">
+                    <a class="nav-link dropdown-toggle text-white fw-bold d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-user-circle fs-4 me-2 text-info"></i>
+                        <span sec:authentication="name">User</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-lg">
+                        <li><a class="dropdown-item" href="/dashboard"><i class="fas fa-th-large me-2"></i>Dashboard</a></li>
+                        <li><a class="dropdown-item" th:href="@{/profile}"><i class="fas fa-user me-2"></i>Profile Details</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" onclick="confirmLogout()"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="hero-section">
+        <div class="container" style="z-index: 1;">
+            <h1 class="display-2 fw-bold mb-4">Elevate Your <span class="text-info">Digital Space</span></h1>
+            <p class="lead mb-5 opacity-75 fs-4">Ek Secure platform jahan aapka data aur mehnat dono mahfooz hain.<br>Aaj hi apne naye digital safar ki shuruat karein.</p>
+            
+            <div sec:authorize="isAnonymous()">
+                <a href="/req/signup" class="btn btn-get-started">Get Started for Free <i class="fas fa-chevron-right ms-2"></i></a>
+            </div>
+            <div sec:authorize="isAuthenticated()">
+                <a href="/dashboard" class="btn btn-get-started">Go to Dashboard <i class="fas fa-rocket ms-2"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <section class="py-5 bg-white">
+        <div class="container text-center">
+            <h2 class="mb-5 fw-bold display-6">"Features Built For You"</h2>
+            <div class="row g-4">
+                
+                <div class="col-md-4">
+                    <div class="card p-4 shadow-sm feature-card">
+                        <div>
+                            <i class="fas fa-user-lock fa-3x icon-style"></i>
+                            <h3 class="fw-bold">Safe & Secure</h3>
+                            <p class="text-muted">Aapka password industry-standard encryption se surakshit hai.</p>
+                        </div>
+                        <div class="mt-auto">
+                            <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2">Privacy Protected</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card p-4 shadow-sm feature-card">
+                        <div>
+                            <i class="fas fa-globe-americas fa-3x icon-style"></i>
+                            <h3 class="fw-bold">24/7 Access</h3>
+                            <p class="text-muted">Duniya ke kisi bhi kone se, kisi bhi device par apna data access karein.</p>
+                        </div>
+                        <div class="mt-auto">
+                            <span class="badge bg-info-subtle text-info rounded-pill px-3 py-2">Uptime 99.9%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card p-4 shadow-sm feature-card">
+                        <div>
+                            <i class="fab fa-whatsapp fa-3x text-success mb-3"></i>
+                            <h3 class="fw-bold">Direct Support</h3>
+                            <p class="text-muted">Koi bhi dikkat ho? Humein turant WhatsApp karein ya call par baat karein.</p>
+                        </div>
+                        <div class="mt-3">
+                            <a href="https://wa.me/919027034292" class="btn btn-success btn-sm w-100 mb-2">
+                                <i class="fab fa-whatsapp me-2"></i>Chat on WhatsApp
+                            </a>
+                            <a href="tel:+919027034292" class="btn btn-outline-dark btn-sm w-100">
+                                <i class="fas fa-phone-alt me-2"></i>Call: +91 9027034292
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-dark text-white text-center py-4 mt-5">
+        <p class="mb-0 text-secondary">&copy; 2026 MyLocker | Made with <i class="fas fa-heart text-danger"></i> in Bulandshahr</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        function confirmLogout() {
+            Swal.fire({
+                title: 'Logout Karein?',
+                text: "Bhai, kya aap sach mein logout karna chahte hain?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Haan, Logout!',
+                cancelButtonText: 'Nahi, Ruko'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '/logout';
+                }
+            })
+        }
+    </script>
+</body>
+</html>

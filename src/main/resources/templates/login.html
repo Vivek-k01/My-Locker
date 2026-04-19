@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login | MyLocker</title>
+  <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+
+  <style>
+    .back-btn-container { position: absolute; top: 20px; left: 20px; z-index: 1000; }
+    .back-to-home {
+      color: white; text-decoration: none; font-size: 1rem;
+      background: rgba(255,255,255,0.1); padding: 8px 15px;
+      border-radius: 50px; backdrop-filter: blur(5px);
+      display: flex; align-items: center; gap: 8px; transition: 0.3s;
+    }
+    .back-to-home:hover { background: rgba(255,255,255,0.2); }
+    
+    .error-msg {
+      background: rgba(255,77,77,0.25); color: #ffcccc;
+      border: 1px solid #ff4d4d; padding: 10px; border-radius: 10px;
+      text-align: center; margin-bottom: 10px; font-size: 0.9rem;
+    }
+    .inputbox { position: relative; margin: 20px 0; }
+    .toggle-password {
+      cursor: pointer; position: absolute; right: 10px; top: 12px;
+      font-size: 1.2rem; z-index: 2; color: white;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      section { margin: 20px 15px; padding: 1.5rem 1.5rem; }
+      h1 { font-size: 1.6rem; }
+      .back-btn-container { top: 10px; left: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="back-btn-container">
+    <a href="/" class="back-to-home">
+        <i class="fas fa-arrow-left"></i> Back to Home
+    </a>
+</div>
+
+<section>
+  <form action="/req/login" method="post">
+    <h1>Login</h1>
+
+    <!-- FIX: Spring Security error message clearly dikhao -->
+    <div th:if="${param.error}" class="error-msg">
+      <i class="fas fa-exclamation-triangle"></i>
+      Username/Password galat hai, ya email verify nahi hua hai.
+    </div>
+    <div th:if="${param.logout}" class="error-msg" style="background:rgba(46,204,113,0.2); border-color:#2ecc71; color:#ccffdd;">
+      <i class="fas fa-check-circle"></i> Aap successfully logout ho gaye!
+    </div>
+
+    <div class="inputbox">
+      <ion-icon name="person-outline"></ion-icon>
+      <input name="username" id="username" required autocomplete="username">
+      <label>Username</label>
+    </div>
+
+    <div class="inputbox">
+      <ion-icon name="eye-off-outline" class="toggle-password" id="eyeIcon"></ion-icon>
+      <input type="password" id="login-password" name="password" required autocomplete="current-password">
+      <label>Password</label>
+    </div>
+
+    <button type="submit">Login</button>
+
+    <div class="register">
+      <p>Don't have an account? <a href="/req/signup">Register</a></p>
+    </div>
+    
+    <div class="register">
+      <p><a href="/req/forgotpassword">Forgot Password?</a></p>
+    </div>
+    
+  </form>
+</section>
+
+<script>
+  const toggleBtn = document.getElementById('eyeIcon');
+  const passwordInput = document.getElementById('login-password');
+
+  toggleBtn.addEventListener('click', function() {
+    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+    passwordInput.setAttribute('type', type);
+    this.setAttribute('name', type === 'password' ? 'eye-off-outline' : 'eye-outline');
+  });
+</script>
+
+</body>
+</html>

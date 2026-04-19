@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | MyLocker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f7f9; }
+        
+        header {
+            background: linear-gradient(to right, #112244, #1e3c72);
+            color: white;
+            padding: 15px 30px 15px 80px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .profile-circle {
+            width: 40px; height: 40px; background: #054f60; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            color: white; font-size: 1.2rem; font-weight: bold; text-transform: uppercase;
+            text-decoration: none; transition: 0.3s;
+        }
+        .profile-circle:hover { transform: scale(1.1); background: #ff9800; }
+
+        .menu-toggle {
+            display: inline-block; cursor: pointer; padding: 12px; position: fixed;
+            top: 15px; left: 15px; z-index: 2001; background: #112244; border-radius: 8px; transition: 0.3s;
+        }
+        .bar1, .bar2, .bar3 { width: 25px; height: 3px; background-color: white; margin: 5px 0; transition: 0.4s; border-radius: 2px; }
+        .change .bar1 { transform: translate(0, 8px) rotate(-45deg); }
+        .change .bar2 { opacity: 0; }
+        .change .bar3 { transform: translate(0, -8px) rotate(45deg); }
+
+        .side-nav {
+            height: 100%; width: 0; position: fixed; z-index: 2000; top: 0; left: 0;
+            background-color: #1a1a1a; overflow-x: hidden; transition: 0.5s; padding-top: 80px; box-shadow: 4px 0 15px rgba(0,0,0,0.3);
+        }
+        .side-nav a, .side-nav button {
+            padding: 15px 25px; text-decoration: none; font-size: 17px; color: #bbb; display: block;
+            transition: 0.3s; width: 100%; text-align: left; border: none; background: none; cursor: pointer;
+        }
+        .side-nav a:hover, .side-nav button:hover { color: white; background-color: #333; padding-left: 35px; }
+        .logout-btn { color: #ff4d4d !important; border-top: 1px solid #333 !important; margin-top: 20px; }
+
+        main { padding: 30px 20px; max-width: 900px; margin: 20px auto; min-height: 70vh; margin-bottom: 80px; }
+        .section-box { animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .search-container {
+            margin: 20px 0; position: relative; background: white; border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid #eef2f6;
+            overflow: hidden; display: flex; align-items: center;
+        }
+        .search-container i { padding-left: 15px; color: #00d2ff; }
+        .search-container input {
+            width: 100%; border: none; padding: 15px; outline: none; font-size: 1rem; color: #333;
+        }
+
+        .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; margin-top: 10px; }
+        .doc-card { 
+            background: white; border: 1px solid #eef2f6; border-radius: 15px; padding: 20px; 
+            text-align: center; transition: 0.3s; cursor: pointer; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+        .doc-card.hidden { display: none; } 
+        .doc-card:hover { transform: translateY(-8px); border-color: #00d2ff; box-shadow: 0 10px 25px rgba(0,210,255,0.15); }
+        .doc-icon { font-size: 3rem; margin-bottom: 12px; transition: 0.3s; }
+        .pdf-icon { color: #e74c3c; }
+        .img-icon { color: #3498db; }
+        .doc-name { display: block; font-weight: 600; color: #333; font-size: 1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .doc-actions { margin-top: 15px; display: flex; justify-content: center; gap: 10px; opacity: 0; transition: 0.3s; }
+        .doc-card:hover .doc-actions { opacity: 1; }
+        .action-btn { width: 35px; height: 35px; border-radius: 50%; border: none; cursor: pointer; background: #f4f7f9; transition: 0.2s; color: #555; display: flex; align-items: center; justify-content: center; text-decoration: none; }
+        .action-btn:hover { background: #00d2ff; color: white; }
+        .add-card { border: 2px dashed #cbd5e0; background: #f8fafc; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #2ecc71; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 3000; backdrop-filter: blur(5px); }
+        .modal-content { background: white; width: 90%; max-width: 420px; border-radius: 20px; padding: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .file-input-box { border: 2px dashed #00d2ff; padding: 25px; border-radius: 12px; text-align: center; margin-top: 15px; cursor: pointer; background: #f0fbff; transition: 0.3s; }
+        .file-input-box:hover { background: #e1f5fe; }
+        
+        .form-group { margin-top: 15px; text-align: left; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #444; }
+        .form-group input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+
+        /* Floating Action Button (FAB) Style */
+    .floating-add-btn {
+    position: fixed;
+    bottom: 110px; /* Footer se thoda upar */
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    box-shadow: 0 6px 20px rgba(0,210,255,0.4);
+    cursor: pointer;
+    z-index: 2500; /* Taaki ye sabke upar rahe */
+    transition: all 0.3s ease;
+    border: none;
+    outline: none;
+   }
+
+   .floating-add-btn:hover {
+    transform: scale(1.1) rotate(90deg);
+    background: #1e3c72;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+   }
+
+   /* Help Desk Container */
+.help-section-container {
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    margin-top: 20px;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Support Card Styling */
+.support-header-card {
+    text-align: center;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    padding: 30px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+}
+
+.support-icon {
+    font-size: 45px;
+    color: #007bff;
+    margin-bottom: 10px;
+}
+
+.support-btn-email {
+    display: inline-block;
+    background-color: #007bff;
+    color: white !important;
+    padding: 12px 25px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 600;
+    margin-top: 15px;
+    transition: 0.3s;
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+}
+
+.support-btn-email:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+}
+
+/* FAQ Styling */
+.faq-main-title {
+    color: #333;
+    border-bottom: 2px solid #007bff;
+    display: inline-block;
+    padding-bottom: 5px;
+    margin-bottom: 20px;
+}
+
+.faq-item-box {
+    border: 1px solid #e1e8ed;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.faq-question-btn {
+    width: 100%;
+    text-align: left;
+    padding: 15px 20px;
+    background: #fff;
+    border: none;
+    font-size: 16px;
+    font-weight: 600;
+    color: #444;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: 0.3s;
+}
+
+.faq-question-btn:hover {
+    background: #f8f9fa;
+}
+
+.faq-answer-text {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+    background: #fdfdfd;
+}
+
+.faq-answer-text p {
+    padding: 15px 20px;
+    color: #666;
+    margin: 0;
+    border-top: 1px solid #f1f1f1;
+}
+
+/* Jab FAQ khulega (JS ke liye) */
+.faq-item-box.active .faq-answer-text {
+    max-height: 200px;
+}
+
+.faq-item-box.active .faq-question-btn {
+    color: #007bff;
+    background: #f0f7ff;
+}
+
+.faq-item-box.active i {
+    transform: rotate(45deg);
+    color: #dc3545;
+}
+
+.fa-angle-down {
+    font-family: "Font Awesome 6 Free" !important; /* Forcefully icon load karega */
+    font-weight: 900; /* Standard icons ke liye zaroori hai */
+    display: inline-block;
+}
+
+
+        /* ===== RESPONSIVE FIXES ===== */
+        @media (max-width: 768px) {
+            header { padding: 12px 15px 12px 65px; }
+            header h1 { font-size: 1.2rem; }
+            main { padding: 15px 10px; margin: 10px auto; }
+            .doc-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+            .doc-card { padding: 15px 10px; }
+            .doc-icon { font-size: 2.2rem; }
+            .doc-name { font-size: 0.85rem; }
+            /* Mobile par doc-actions hamesha visible rahe (hover nahi hota touch par) */
+            .doc-actions { opacity: 1 !important; }
+            .action-btn { width: 30px; height: 30px; font-size: 0.8rem; }
+            .modal-content { padding: 20px 15px; }
+            .floating-add-btn { bottom: 80px; right: 15px; width: 50px; height: 50px; font-size: 1.4rem; }
+        }
+        @media (max-width: 480px) {
+            .doc-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            header h1 { font-size: 1rem; }
+            .side-nav a, .side-nav button { font-size: 15px; padding: 12px 20px; }
+            .contact-grid { grid-template-columns: 1fr !important; }
+        }
+        footer { background-color: #1a1a1a; color: #888; text-align: center; padding: 15px; position: fixed; bottom: 0; width: 100%; }
+    </style>
+</head>
+<body>
+
+    <div class="menu-toggle" onclick="toggleMenu(this)">
+        <div class="bar1"></div><div class="bar2"></div><div class="bar3"></div>
+    </div>
+
+    <header>
+        <div class="header-left">
+            <h1 style="margin:0;"><i class="fas fa-cube me-2"></i> MyLocker</h1>
+            <div style="font-size: 0.9rem; opacity: 0.9;">Welcome, <strong sec:authentication="name">Abhi</strong>!</div>
+        </div>
+        <a th:href="@{/profile}" class="profile-circle" title="View Profile">
+            <span th:text="${#strings.substring(#authentication.name, 0, 1).toUpperCase()}">U</span>
+        </a>
+    </header>
+
+    <nav id="sideMenu" class="side-nav">
+        <a href="javascript:void(0)" onclick="showSection('home-section')"><i class="fas fa-vault me-2"></i> My Locker</a>
+        <a th:href="@{/profile}"><i class="fas fa-user me-2"></i> My Profile</a>
+        <a href="javascript:void(0)" onclick="showSection('help-section')"><i class="fas fa-headset me-2"></i> Help Desk</a>
+        <a href="/"><i class="fas fa-external-link-alt me-2"></i> Back to Website</a>
+        <button onclick="confirmLogout()" class="logout-btn"><i class="fas fa-sign-out-alt me-2"></i> Logout </button>
+    </nav>
+
+    <main>
+        <div id="home-section" class="section-box">
+            <h2 style="color: #112244; margin-bottom: 5px;"><i class="fas fa-folder-open me-2"></i> My Digital Locker</h2>
+            
+            <div class="search-container">
+                <i class="fas fa-search"></i>
+                <input type="text" id="docSearch" placeholder="Search documents by name..." onkeyup="filterDocs()">
+            </div>
+
+            <div class="doc-grid" id="docGrid">
+                <div class="doc-card" th:each="doc : ${documents}">
+                    <div class="doc-icon" th:classappend="${doc.originalFileName.endsWith('.pdf') ? 'pdf-icon' : 'img-icon'}">
+                        <i th:class="${doc.originalFileName.endsWith('.pdf') ? 'fas fa-file-pdf' : 'fas fa-image'}"></i>
+                    </div>
+                    <span class="doc-name" th:text="${doc.displayName}">Document Name</span>
+                    
+                    <div class="doc-actions">
+                        <a th:href="@{'/documents/view/' + ${doc.id}}" target="_blank" class="action-btn" title="View">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a th:href="@{'/documents/download/' + ${doc.id}}" class="action-btn" title="Download">
+                            <i class="fas fa-download"></i>
+                        </a>
+                        <button class="action-btn" title="Delete" th:onclick="'confirmDelete(' + ${doc.id} + ')'">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="doc-card add-card" onclick="openUploadModal()">
+                    <div class="doc-icon"><i class="fas fa-plus-circle"></i></div>
+                    <span class="doc-name">Upload New</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="help-section" class="section-box" style="display: none;">
+            <div class="support-card" style="border-left: 5px solid #00d2ff; padding: 20px; background: white; border-radius: 10px;">
+                <h2><i class="fas fa-headset me-2"></i> Support Team</h2>
+                <div class="contact-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
+                    <a href="https://wa.me/919027034292" class="contact-item whatsapp" target="_blank" style="background: #25D366; color: white; padding: 10px; text-align: center; border-radius: 8px; text-decoration: none;"><i class="fab fa-whatsapp me-2"></i> WhatsApp</a>
+                    <a href="tel:+919027034292" class="contact-item calling" style="background: #007bff; color: white; padding: 10px; text-align: center; border-radius: 8px; text-decoration: none;"><i class="fas fa-phone-alt me-2"></i> Call</a>
+                </div>
+                
+            </div>
+   <div id="helpDeskSection" class="help-section-container">
+    
+    <div class="support-header-card">
+        <div class="support-icon">
+            <i class="fas fa-headset"></i>
+        </div>
+        <h2>My Locker Support</h2>
+        <p>Email support ke zariye apni samasya batayein.</p>
+        
+<a href="https://mail.google.com/mail/?view=cm&fs=1&to=support.mylocker@gmail.com&su=My%20Locker%20Support%20Request&body=Hello%20Team,%0D%0A%0D%0AI%20am%20facing%20an%20issue%20with%20my%20digital%20locker.%20Details:%20" 
+   target="_blank" 
+   class="support-btn-email">
+    <i class="fas fa-envelope"></i> Send Email For Support
+</a>
+    </div>
+
+    <div class="faq-wrapper">
+        <h3 class="faq-main-title"> <i class="fas fa-question-circle" style="color: #007bff; margin-right: 10px;"></i> Frequently Asked Questions..!</h3>
+
+        <div class="faq-item-box">
+            <button class="faq-question-btn">Kya mere documents safe hain? <i class="fas fa-angle-down"></i></button>
+            <div class="faq-answer-text">
+                <p>Ji haan! My Locker high-level encryption use karta hai. Aapke documents aapke password ke bina koi nahi dekh sakta.</p>
+            </div>
+        </div>
+
+        <div class="faq-item-box">
+            <button class="faq-question-btn">Upload karne ki file limit kya hai? <i class="fas fa-angle-down"></i></button>
+            <div class="faq-answer-text">
+                <p>Aap 50MB tak ki single file (PDF/Image) upload kar sakte hain.</p>
+            </div>
+        </div>
+
+        <div class="faq-item-box">
+            <button class="faq-question-btn">Kya main documents delete kar sakta hoon? <i class="fas fa-angle-down"></i></button>
+            <div class="faq-answer-text">
+                <p>Haan, 'My Documents' section mein ja kar aap kisi bhi file ko hamesha ke liye delete kar sakte hain.</p>
+            </div>
+        </div>
+
+        <div class="faq-item-box">
+            <button class="faq-question-btn">Kaunse formats support hote hain? <i class="fas fa-angle-down"></i></button>
+            <div class="faq-answer-text">
+                <p>Aap PDF, JPEG, aur PNG formats mein apne documents save kar sakte hain.</p>
+            </div>
+        </div>
+
+        <div class="faq-item-box">
+            <button class="faq-question-btn">Password bhulne par kya karein? <i class="fas fa-angle-down"></i></button>
+            <div class="faq-answer-text">
+                <p>Login page par 'Forgot Password' option use karein, reset link aapki email par aa jayega.</p>
+            </div>
+        </div>
+    </div>
+</div>
+            <button onclick="showSection('home-section')" style="margin-top: 15px; background: none; border: none; color: #1e3c72; cursor: pointer; font-weight: bold;">← Back</button>
+        </div>
+    </main>
+
+    <div id="uploadModal" class="modal-overlay">
+        <div class="modal-content">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0; color:#112244;">Upload Document</h3>
+                <span onclick="closeModal()" style="cursor:pointer; font-size:1.5rem; color:#888;">&times;</span>
+            </div>
+            
+            <form th:action="@{/documents/upload}" method="post" enctype="multipart/form-data">
+                <div class="file-input-box" onclick="document.getElementById('fileInput').click()">
+                    <i class="fas fa-cloud-upload-alt" style="font-size:2.5rem; color:#00d2ff; margin-bottom:10px;"></i>
+                    <p id="fileLabel" style="margin:0; color:#666;">Click to select PDF or Image</p>
+                    <input type="file" name="file" id="fileInput" hidden accept=".pdf,.jpg,.png" required onchange="handleFileSelect(this)">
+                </div>
+
+                <div class="form-group">
+                    <label>Document Display Name</label>
+                    <input type="text" name="displayName" id="customFileName" placeholder="Enter name for this document" required>
+                </div>
+
+                <div style="margin-top:20px; display:flex; gap:10px;">
+                    <button type="button" onclick="closeModal()" style="flex:1; padding:12px; border:none; border-radius:10px; cursor:pointer; background:#eee;">Cancel</button>
+                    <button type="submit" style="flex:1; padding:12px; border:none; border-radius:10px; cursor:pointer; background:#00d2ff; color:white; font-weight:bold;">Confirm Upload</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+  <div class="floating-add-btn" onclick="openUploadModal()" title="Upload New Document">
+    <i class="fas fa-plus"></i>
+</div>
+
+ <footer class="bg-dark text-white text-center py-4 mt-5">
+        <p class="mb-0 text-secondary">&copy; 2026 MyLocker | Made with <i class="fas fa-heart text-danger"></i> in Bulandshahr</p>
+    </footer>
+    
+    <script>
+        function toggleMenu(x) {
+            x.classList.toggle("change");
+            var menu = document.getElementById("sideMenu");
+            menu.style.width = (menu.style.width === "260px") ? "0" : "260px";
+        }
+
+        function showSection(id) {
+            document.getElementById('home-section').style.display = 'none';
+            document.getElementById('help-section').style.display = 'none';
+            document.getElementById(id).style.display = 'block';
+            if(document.getElementById("sideMenu").style.width === "260px") toggleMenu(document.querySelector('.menu-toggle'));
+            window.scrollTo(0, 0);
+        }
+
+        function openUploadModal() { document.getElementById('uploadModal').style.display = 'flex'; }
+        
+        function closeModal() { 
+            document.getElementById('uploadModal').style.display = 'none'; 
+            document.getElementById('customFileName').value = ''; 
+            document.getElementById('fileLabel').innerText = 'Click to select PDF or Image';
+        }
+
+        function handleFileSelect(input) {
+            if (input.files && input.files[0]) {
+                const fileName = input.files[0].name;
+                document.getElementById('fileLabel').innerText = "Selected: " + fileName;
+                document.getElementById('customFileName').value = fileName.split('.').slice(0, -1).join('.');
+            }
+        }
+
+        function filterDocs() {
+            const searchText = document.getElementById('docSearch').value.toLowerCase();
+            const cards = document.querySelectorAll('.doc-card:not(.add-card)');
+            cards.forEach(card => {
+                const docName = card.querySelector('.doc-name').innerText.toLowerCase();
+                card.style.display = docName.includes(searchText) ? 'block' : 'none';
+            });
+        }
+
+        function confirmLogout() {
+            Swal.fire({
+                title: 'Logout?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'Yes'
+            }).then((result) => { if (result.isConfirmed) window.location.href = '/logout'; });
+        }
+
+        function confirmDelete(id) {
+            Swal.fire({
+                title: 'Delete Document?',
+                text: "Ye hamesha ke liye delete ho jayega!",
+                icon: 'error',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'Delete'
+            }).then((result) => { if (result.isConfirmed) window.location.href = '/documents/delete/' + id; });
+        }
+
+
+        // FAQ Accordion Logic
+    document.querySelectorAll('.faq-question-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            const faqItem = button.parentElement;
+            // Hum specifically tere naye icon ko dhund rahe hain
+            const icon = button.querySelector('.fa-angle-down');
+
+            // 1. Doosre saare khule hue FAQs ko band karne ke liye
+            document.querySelectorAll('.faq-item-box').forEach(item => {
+                if (item !== faqItem) {
+                    item.classList.remove('active');
+                    const otherIcon = item.querySelector('.fa-angle-down');
+                    if(otherIcon) {
+                        otherIcon.style.transform = "rotate(0deg)";
+                    }
+                }
+            });
+
+            // 2. Is wale FAQ ko toggle (khollna/band karna) karo
+            faqItem.classList.toggle('active');
+
+            // 3. Arrow ki direction badlo (Ghumao)
+            if (faqItem.classList.contains('active')) {
+                icon.style.transform = "rotate(180deg)"; // Teer upar (^)
+                icon.style.transition = "0.3s ease";
+            } else {
+                icon.style.transform = "rotate(0deg)";   // Teer wapas niche (v)
+                icon.style.transition = "0.3s ease";
+            }
+        });
+    });
+
+        // Dashboard load hote hi check karega ki URL mein kya message hai
+window.addEventListener('load', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+
+    // 1. File Upload hone par
+    if (urlParams.has('success')) {
+    Swal.fire({
+        icon: 'success', // Isse Right wala checkmark apne aap aa jayega
+        title: 'Success', // Title mein sirf "Success"
+        timer: 2000,
+        showConfirmButton: false,
+        background: '#fff',
+        iconColor: '#28a745', // Perfect Green color
+        customClass: {
+            popup: 'animated bounceIn' // Agar animation chahiye toh
+        }
+    });
+}
+
+    // 2. File Delete hone par
+    if (urlParams.has('deleted')) {
+        Swal.fire({
+            icon: 'success',
+            title: 'Uda di!',
+            text: 'Bhai, document hamesha ke liye delete ho gaya.',
+            timer: 2000,
+            showConfirmButton: false,
+            background: '#fff',
+            iconColor: '#e74c3c'
+        });
+    }
+
+    // 3. Koi Error aane par
+    if (urlParams.has('error')) {
+        Swal.fire({
+            icon: 'error',
+            title: 'O Teri!',
+            text: 'Kuch gadbad ho gayi, fir se try karo.',
+            confirmButtonColor: '#00d2ff'
+        });
+    }
+});
+
+    // 4. File Size over ho to
+    const urlParams = new URLSearchParams(window.location.search);
+
+// Success wala (Jo pehle se hai)
+if (urlParams.has('success')) {
+    Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        timer: 2000,
+        showConfirmButton: false
+    });
+}
+
+// ERROR wala (Naya wala - Badi file ke liye)
+if (urlParams.has('error')) {
+    Swal.fire({
+        icon: 'error',
+        title: 'Badi File!',
+        text: 'Bhai, file 50MB se choti dalo.',
+        confirmButtonColor: '#d33'
+    });
+}
+ 
+
+    </script>
+</body>
+</html>

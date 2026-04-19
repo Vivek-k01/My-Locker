@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up | MyLocker</title>
+  <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+  <style>
+    .back-btn-container { position: absolute; top: 20px; left: 20px; z-index: 1000; }
+    .back-to-home { 
+      color: white; text-decoration: none; font-size: 1rem; 
+      background: rgba(255,255,255,0.1); padding: 8px 15px; 
+      border-radius: 50px; backdrop-filter: blur(5px); 
+      display: flex; align-items: center; gap: 8px; transition: 0.3s;
+    }
+    .back-to-home:hover { background: rgba(255,255,255,0.2); }
+    .inputbox { position: relative; margin-bottom: 30px; }
+    .toggle-password {
+      cursor: pointer; position: absolute; right: 15px; top: 12px;
+      font-size: 1.3rem; z-index: 10; color: white; pointer-events: auto;
+    }
+    .inputbox input { padding-right: 40px; }
+    .msg-box {
+      display: none; padding: 10px 15px; border-radius: 10px;
+      margin-bottom: 15px; font-size: 0.9rem; text-align: center;
+    }
+    .msg-box.error { background: rgba(255,77,77,0.3); color: #ffcccc; border: 1px solid #ff4d4d; display: block; }
+    .msg-box.success { background: rgba(46,204,113,0.3); color: #ccffdd; border: 1px solid #2ecc71; display: block; }
+
+    @media (max-width: 600px) {
+      section { margin: 20px 15px; padding: 1.5rem 1.5rem; }
+      h1 { font-size: 1.6rem; }
+      .back-btn-container { top: 10px; left: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="back-btn-container">
+    <a href="/" class="back-to-home"><i class="fas fa-arrow-left"></i> Back to Home</a>
+</div>
+
+<section>
+  <form id="signup-form"> 
+    <h1>Sign Up</h1>
+
+    <div id="msgBox" class="msg-box"></div>
+
+    <div class="inputbox">
+        <ion-icon name="person-outline"></ion-icon>
+        <input type="text" id="username" required>
+        <label>Username</label>
+    </div>
+    <div class="inputbox">
+        <ion-icon name="mail-outline"></ion-icon>
+        <input type="email" id="email" required>
+        <label>Email</label>
+    </div>
+    <div class="inputbox">
+       <ion-icon name="eye-off-outline" class="toggle-password" data-target="password"></ion-icon>
+       <input type="password" id="password" required>
+       <label>Password</label>
+    </div>  
+    <div class="inputbox">
+      <ion-icon name="eye-off-outline" class="toggle-password" data-target="passwordcon"></ion-icon>
+      <input type="password" id="passwordcon" required>
+      <label>Confirm Password</label>
+    </div>  
+
+    <button id="submit" type="submit">Sign Up</button>
+    <div class="register">
+      <p>Already have an account? <a href="/req/login">Log In</a></p>
+    </div>
+  </form>
+</section>
+
+<script>
+  // Password Show/Hide
+  document.querySelectorAll('.toggle-password').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      const input = document.getElementById(this.getAttribute('data-target'));
+      input.type = input.type === 'password' ? 'text' : 'password';
+      this.setAttribute('name', input.type === 'password' ? 'eye-off-outline' : 'eye-outline');
+    });
+  });
+
+  function showMsg(text, type) {
+    const box = document.getElementById('msgBox');
+    box.textContent = text;
+    box.className = 'msg-box ' + type;
+  }
+
+  document.getElementById('submit').addEventListener('click', function(e) {
+    e.preventDefault();
+
+    const username = document.getElementById('username').value.trim();
+    const email    = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const confirm  = document.getElementById('passwordcon').value;
+
+    if (!username || !email || !password || !confirm) {
+      showMsg('Saari details bharna zaroori hai!', 'error');
+      return;
+    }
+    if (password !== confirm) {
+      showMsg('Password match nahi ho raha!', 'error');
+      return;
+    }
+    if (password.length < 6) {
+      showMsg('Password kam se kam 6 characters ka hona chahiye.', 'error');
+      return;
+    }
+
+    this.disabled = true;
+    this.textContent = 'Please wait...';
+
+    fetch('/req/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, email, password })
+    })
+    .then(async response => {
+      const msg = await response.text();
+      if (response.ok) {
+        showMsg('Registration successful! Login page par ja rahe hain...', 'success');
+        // 1.5 second baad seedha login page par bhejo
+        setTimeout(() => {
+          window.location.href = '/req/login';
+        }, 1500);
+      } else {
+        showMsg(msg || 'Signup fail ho gaya. Dobara try karo.', 'error');
+        this.disabled = false;
+        this.textContent = 'Sign Up';
+      }
+    })
+    .catch(() => {
+      showMsg('Server se connection nahi hua. Try again.', 'error');
+      this.disabled = false;
+      this.textContent = 'Sign Up';
+    });
+  });
+</script>
+
+</body>
+</html>

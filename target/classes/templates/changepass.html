@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/signup.js" defer></script>
+</head>
+<body>
+
+<section>
+  <form action="/req/changepass" method="post">
+
+<h2>Create new password</h2>
+
+<p>
+Your new password must be different <br>
+from previous used password.
+</p>
+
+<div class="inputbox">
+    <input type="password" id="password" name="newpassword" required>
+    <label>New Password</label>
+</div>
+
+<div class="inputbox">
+    <input type="password" id="passwordcon" name="passwordcon" required>
+    <label>Confirm Password</label>
+</div>
+
+<button type="submit">Submit</button>
+
+</form>
+
+
+
+
+
+
